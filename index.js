@@ -8,6 +8,9 @@ app.get("/", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("hello");
 });
+app.get("/hi", (req, res) => {
+  res.send("hi");
+});
 
 const port = 3001;
 app.listen(port, () => {
