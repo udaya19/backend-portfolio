@@ -44,11 +44,18 @@ router.post("/user-image", uploader.single("avatar"), async (req, res) => {
 });
 
 router.get("/image", async (req, res) => {
-  const userImg = await UserImage.find({});
-  return res.status(200).json({
-    success: true,
-    userImg,
-  });
+  try {
+    const userImg = await UserImage.find({});
+    return res.status(200).json({
+      success: true,
+      userImg,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error,
+    });
+  }
 });
 
 module.exports = router;
