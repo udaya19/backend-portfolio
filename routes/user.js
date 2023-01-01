@@ -1,8 +1,17 @@
 const router = require("express").Router();
 const cloudinary = require("cloudinary").v2;
-const uploader = require("../config/multer");
-const { estimatedDocumentCount } = require("../model/userImg");
-const UserImage = require("../model/userImg");
+
+const config = "../config";
+const hashPassword = require(`${config}/hash_password`);
+const comparePassword = require(`${config}/comparePassword`);
+const generateToken = require(`${config}/jwtToken`);
+const uploader = require(`${config}/multer`);
+
+const model = "../model";
+const User = require(`${model}/user`);
+const UserImage = require(`${model}/userImg`);
+const { estimatedDocumentCount } = require(`${model}/userImg`);
+
 router.post("/user-image", uploader.single("avatar"), async (req, res) => {
   try {
     const countDocuments = estimatedDocumentCount();
@@ -54,6 +63,60 @@ router.get("/image", async (req, res) => {
     return res.json({
       success: false,
       message: error,
+    });
+  }
+});
+
+router.post("/new-user", uploader.none(), async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const encryptedPassword = await hashPassword(password);
+    const newUser = new User({
+      name,
+      email,
+      password: encryptedPassword,
+    });
+    await newUser.save();
+    return res.status(200).json({
+      success: true,
+      newUser,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.post("/login", uploader.none(), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "Invalid email/password",
+      });
+    }
+    const isSame = await comparePassword(password, user.password);
+    if (!isSame) {
+      return res.status(404).json({
+        success: false,
+        error: "Invalid email/password",
+      });
+    }
+    const token = generateToken(user._id);
+    return res.status(200).json({
+      success: true,
+      message: "Login succesfull",
+      user,
+      token,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      error: error.message,
     });
   }
 });
