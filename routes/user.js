@@ -1,3 +1,5 @@
+const { isAuthenticated } = require("../middlewares/auth");
+
 const router = require("express").Router();
 const cloudinary = require("cloudinary").v2;
 
@@ -119,6 +121,13 @@ router.post("/login", uploader.none(), async (req, res) => {
       error: error.message,
     });
   }
+});
+
+router.get("/profile", isAuthenticated, async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: req.user,
+  });
 });
 
 module.exports = router;
