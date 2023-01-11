@@ -1,7 +1,7 @@
-const { isAuthenticated } = require("../middlewares/auth");
-
 const router = require("express").Router();
 const cloudinary = require("cloudinary").v2;
+
+const { isAuthenticated } = require("../middlewares/auth");
 
 const config = "../config";
 const hashPassword = require(`${config}/hash_password`);
