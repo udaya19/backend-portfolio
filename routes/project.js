@@ -1,10 +1,11 @@
 const router = require("express").Router();
-const cloudinary = require("cloudinary").v2;
 
 const Project = require("../model/project");
 const uploader = require("../config/multer");
+
 const { internalError, success, notFound } = require("../apiResponse/response");
 const { isAuthenticated } = require("../middlewares/auth");
+const { addImage, destroyImage } = require("../config/uploading_cloudinary");
 
 router.get("/", async (req, res) => {
   try {
@@ -22,9 +23,7 @@ router.post(
   async (req, res) => {
     try {
       const { title, link } = req.body;
-      const { public_id, secure_url: url } = await cloudinary.uploader.upload(
-        req.file.path
-      );
+      const { public_id, secure_url: url } = await addImage(req.file.path);
       const newProject = new Project({
         title,
         link,
@@ -61,10 +60,8 @@ router.post(
         project.link = link;
       }
       if (projectImg) {
-        await cloudinary.uploader.destroy(project.projectImg.public_id);
-        const { public_id, secure_url } = await cloudinary.uploader.upload(
-          req.file.path
-        );
+        await destroyImage(project.projectImg.public_id);
+        const { public_id, secure_url } = await addImage(req.file.path);
         project.projectImg.public_id = public_id;
         project.projectImg.url = secure_url;
       }
@@ -85,7 +82,7 @@ router.post("/delete/:id", isAuthenticated, async (req, res) => {
       return res.status(404).json(notFound("Project not found", false));
     }
     if (project.projectImg) {
-      await cloudinary.uploader.destroy(project.projectImg.public_id);
+      await destroyImage(project.projectImg.public_id);
     }
     await project.remove();
     return res

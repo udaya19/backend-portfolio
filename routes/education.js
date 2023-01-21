@@ -1,12 +1,12 @@
 const router = require("express").Router();
-const cloudinary = require("cloudinary").v2;
 
 const uploader = require("../config/multer");
 
 const Education = require("../model/education");
 
-const { internalError, success } = require("../apiResponse/response");
+const { internalError, success, notFound } = require("../apiResponse/response");
 const { isAuthenticated } = require("../middlewares/auth");
+const { addImage, destroyImage } = require("../config/uploading_cloudinary");
 
 router.get("/", async (req, res) => {
   try {
@@ -24,9 +24,7 @@ router.post(
   async (req, res) => {
     try {
       const newEducation = new Education(req.body);
-      const { public_id, secure_url } = await cloudinary.uploader.upload(
-        req.file.path
-      );
+      const { public_id, secure_url } = await addImage(req.file.path);
       newEducation.logo.public_id = public_id;
       newEducation.logo.url = secure_url;
       await newEducation.save();
@@ -51,10 +49,8 @@ router.post(
         return res.status(404).json(notFound("Education not found", false));
       }
       if (req.body.logo) {
-        await cloudinary.uploader.destroy(updatedEducation.logo.public_id);
-        const { public_id, secure_url } = await cloudinary.uploader.upload(
-          req.file.path
-        );
+        await destroyImage(updatedEducation.logo.public_id);
+        const { public_id, secure_url } = await addImage(req.file.path);
         updatedEducation.logo.public_id = public_id;
         updatedEducation.logo.url = secure_url;
       }
@@ -73,7 +69,7 @@ router.post("/delete/:id", isAuthenticated, async (req, res) => {
       return res.status(404).json(notFound("Education not found", false));
     }
     if (deleteEducation.logo) {
-      await cloudinary.uploader.destroy(deleteEducation.logo.public_id);
+      await destroyImage(deleteEducation.logo.public_id);
     }
     await deleteEducation.remove();
     return res.status(200).json(success("Education deleted", null, true));
