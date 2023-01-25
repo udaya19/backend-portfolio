@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { unAuthorizedError } = require("../apiResponse/response");
+const { unAuthorizedError, internalError } = require("../apiResponse/response");
 
 const User = require("../model/user");
 
