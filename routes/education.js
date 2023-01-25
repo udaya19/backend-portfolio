@@ -78,4 +78,16 @@ router.post("/delete/:id", isAuthenticated, async (req, res) => {
   }
 });
 
+router.post("/:id", isAuthenticated, async (req, res) => {
+  try {
+    const education = await Education.findById(req.params.id);
+    if (!education) {
+      return res.status(404).json(notFound("Education not found", false));
+    }
+    return res.status(200).json(success(null, education, true));
+  } catch (error) {
+    return res.status(500).json(internalError(error.message, false));
+  }
+});
+
 module.exports = router;
