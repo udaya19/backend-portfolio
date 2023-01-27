@@ -13,6 +13,10 @@ const projectSchema = new mongoose.Schema({
     public_id: String,
     url: String,
   },
+  description: {
+    type: String,
+    required: true,
+  },
 });
 
 const Project = mongoose.model("Project", projectSchema);

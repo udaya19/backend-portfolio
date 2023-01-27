@@ -42,7 +42,7 @@ router.post(
   uploader.single("projectImg"),
   async (req, res) => {
     try {
-      const { title, link, projectImg } = req.body;
+      const { title, link, projectImg, description } = req.body;
       const project = await Project.findById(req.params.id);
       if (!project) {
         return res.status(404).json(notFound("Project not found", false));
@@ -52,6 +52,9 @@ router.post(
       }
       if (link) {
         project.link = link;
+      }
+      if (description) {
+        project.description = description;
       }
       if (projectImg) {
         await destroyImage(project.projectImg.public_id);
