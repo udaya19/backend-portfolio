@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const About = require("../model/about");
+const uploader = require("../config/multer");
 const { isAuthenticated } = require("../middlewares/auth");
 const { success, internalError, notFound } = require("../apiResponse/response");
 
@@ -14,7 +15,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/add", isAuthenticated, async (req, res) => {
+router.post("/add", uploader.none(), isAuthenticated, async (req, res) => {
   try {
     const { content } = req.body;
     const newAbout = new About({
@@ -41,19 +42,26 @@ router.post("/:id", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/update/:id", isAuthenticated, async (req, res) => {
-  try {
-    const { content } = req.body;
-    const newAbout = await About.findByIdAndUpdate(req.params.id, { content });
-    if (!newAbout) {
-      return res.status(404).json(notFound("Not Found", false));
+router.post(
+  "/update/:id",
+  uploader.none(),
+  isAuthenticated,
+  async (req, res) => {
+    try {
+      const { content } = req.body;
+      const newAbout = await About.findByIdAndUpdate(req.params.id, {
+        content,
+      });
+      if (!newAbout) {
+        return res.status(404).json(notFound("Not Found", false));
+      }
+      await newAbout.save();
+      res.status(200).json(success("Content updated", null, true));
+    } catch (error) {
+      return res.status(500).json(internalError(error.message, false));
     }
-    await newAbout.save();
-    res.status(200).json(success("Content updated", null, true));
-  } catch (error) {
-    return res.status(500).json(internalError(error.message, false));
   }
-});
+);
 
 router.post("/delete/:id", isAuthenticated, async (req, res) => {
   try {
